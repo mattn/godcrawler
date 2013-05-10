@@ -32,17 +32,44 @@ type Outline struct {
 	Outlines []*Outline `xml:"outline"`
 }
 
+var blacklistNodes = []string {
+	"style",
+	"script",
+	"head",
+	"title",
+	"meta",
+	"link",
+	"style",
+	"iframe",
+	"frame",
+	"frameset",
+	"svg",
+	"xmp",
+	"form",
+	"input",
+	"isindex",
+}
+
 func htmlWalk(node *html.Node) {
 	if node.Type == html.ElementNode {
-		if node.Data == "head" || node.Data == "script" || node.Data == "link" || node.Data == "style" {
-			node.Parent.RemoveChild(node)
-			return
+		for _, w := range blacklistNodes {
+			if node.Data != w {
+				node.Parent.RemoveChild(node)
+				return
+			}
 		}
 		var attrs []html.Attribute
 		for n := 1; n < len(node.Attr); n++ {
-			if !strings.HasPrefix(strings.ToLower(node.Attr[n].Key), "on") {
-				attrs = append(attrs, node.Attr[n])
+			key := strings.ToLower(node.Attr[n].Key)
+			if strings.HasPrefix(key, "on") {
+				continue
 			}
+			if key == "src" || key == "href" {
+				if !strings.HasPrefix(strings.TrimSpace(node.Attr[n].Val), "http://") && !strings.HasPrefix(strings.TrimSpace(node.Attr[n].Val), "https://") {
+					continue
+				}
+			}
+			attrs = append(attrs, node.Attr[n])
 		}
 		node.Attr = attrs
 	}
