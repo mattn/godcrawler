@@ -24,14 +24,14 @@ func main() {
 
 	crawler := godcrawler.New(db)
 
-	if len(os.Args) == 3 {
+	if nArgs == 3 {
 		f, err := os.Open(os.Args[2])
 		if err != nil {
 			log.Println(err)
 			os.Exit(1)
 		}
-		f.Close()
 		crawler.ImportOPML(f)
+		f.Close()
 	} else {
 		crawler.Run()
 	}
