@@ -115,13 +115,21 @@ func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*fee
 		}
 
 		guid := item.Guid
-		link := item.Guid
+		link := ""
 		for _, l := range item.Links {
+			fmt.Println(l)
 			if l.Href != "" && (l.Type == "text/html" || l.Rel == "alternate") {
 				link = l.Href
 				break
 			}
 		}
+		if link == "" && len(item.Links) == 1 {
+			link = item.Links[0].Href
+		}
+		if link == "" {
+			link = guid
+		}
+
 		date := time.Now().Format("2006-01-02 15:04:05")
 		for _, dateFormat := range dateFormats {
 			if t, err := time.Parse(dateFormat, item.PubDate); err == nil {
