@@ -108,10 +108,18 @@ func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*fee
 		}
 		htmlWalk(doc)
 		var buf bytes.Buffer
-		err = html.Render(&buf, doc)
-		if err != nil {
-			log.Println(err)
-			continue
+		for doc != nil {
+			if doc.Data != "" && doc.Data != "html" && doc.Data != "body" {
+				break
+			}
+			doc = doc.FirstChild
+		}
+		if doc != nil {
+			err = html.Render(&buf, doc)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 		}
 
 		guid := item.Guid
