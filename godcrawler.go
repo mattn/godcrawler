@@ -270,7 +270,7 @@ func (c *Crawler) Entry(id string) (*Entry, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	row := c.db.QueryRow("select url, site, title, content, created from ENTRY where id = ?", id)
+	row := c.db.QueryRow("select id, url, site, title, content, created from ENTRY where id = ?", id)
 	var entry Entry
 	err := row.Scan(&entry.Id, &entry.Link, &entry.Site, &entry.Title, &entry.Content, &entry.Created)
 	if err != nil {
