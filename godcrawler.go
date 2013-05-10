@@ -250,7 +250,7 @@ func (c *Crawler) Entries(num int) (entries []Entry, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	rows, err := c.db.Query("select id, url, site, title, created from ENTRY order by created desc limit 50")
+	rows, err := c.db.Query("select id, url, site, title, created from ENTRY order by created desc limit ?", num)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func (c *Crawler) Entries(num int) (entries []Entry, err error) {
 	for rows.Next() {
 		var entry Entry
 		err := rows.Scan(&entry.Id, &entry.Link, &entry.Site, &entry.Title, &entry.Created)
-		if err == nil {
+		if err != nil {
 			return nil, err
 		}
 		entries = append(entries, entry)

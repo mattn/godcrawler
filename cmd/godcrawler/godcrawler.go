@@ -10,21 +10,22 @@ import (
 )
 
 func main() {
-	if len(os.Args) > 2 {
-		fmt.Println("Usage: godcrawler [opml]")
+	nArgs := len(os.Args)
+	if nArgs != 2 && nArgs != 3 {
+		fmt.Println("Usage: godcrawler [db] [opml]")
 		os.Exit(1)
 	}
 
-	db, err := sql.Open("sqlite3", "./godcrawler.db")
+	db, err := sql.Open("sqlite3", os.Args[1])
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 
 	crawler := godcrawler.New(db)
 
-	if len(os.Args) == 2 {
-		f, err := os.Open(os.Args[1])
+	if len(os.Args) == 3 {
+		f, err := os.Open(os.Args[2])
 		if err != nil {
 			log.Println(err)
 			os.Exit(1)
