@@ -61,6 +61,7 @@ var dateFormats = []string{
 	"2006-01-02",
 	"2006-01-02T15:04:05 -0700",
 	"2006-01-02T15:04:05",
+	"2006-01-02T15:04:05Z",
 	"2006-01-02T15:04:05-0700",
 	"2006-01-02T15:04:05-07:00",
 	"2006-1-2 15:04:05",
@@ -101,7 +102,13 @@ type Crawler struct {
 
 func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*feeder.Item) {
 	for _, item := range items {
-		doc, err := html.Parse(strings.NewReader(item.Description))
+		var r io.Reader
+		if item.Content != nil {
+			r = strings.NewReader(item.Content.Text)
+		} else {
+			r = strings.NewReader(item.Description)
+		}
+		doc, err := html.Parse(r)
 		if err != nil {
 			log.Println(err)
 			continue
