@@ -2,25 +2,29 @@ package godcrawler
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
-	"code.google.com/p/mahonia"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/xml"
 	"fmt"
-	"github.com/jteeuwen/go-pkg-rss"
 	"io"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mattn/go-encoding"
+	"github.com/mattn/go-pkg-rss"
+
+	"golang.org/x/net/html"
+	"golang.org/x/text/transform"
+	//"code.google.com/p/mahonia"
 )
 
 type Entry struct {
-	Id string
-	Link string
-	Site string
-	Title string
+	Id      string
+	Link    string
+	Site    string
+	Title   string
 	Content string
 	Created string
 }
@@ -32,7 +36,7 @@ type Outline struct {
 	Outlines []*Outline `xml:"outline"`
 }
 
-var blacklistNodes = []string {
+var blacklistNodes = []string{
 	"style",
 	"script",
 	"head",
@@ -156,7 +160,7 @@ func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*fee
 			}
 		}
 
-		guid := item.Guid
+		guid := ""
 		link := ""
 		for _, l := range item.Links {
 			fmt.Println(l)
@@ -165,11 +169,15 @@ func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*fee
 				break
 			}
 		}
-		if link == "" && len(item.Links) == 1 {
-			link = item.Links[0].Href
-		}
 		if link == "" {
-			link = guid
+			if len(item.Links) == 1 {
+				link = item.Links[0].Href
+			} else if guid != "" {
+				link = guid
+			} else {
+			}
+		} else if guid == "" {
+			guid = link
 		}
 
 		date := time.Now().Format("2006-01-02 15:04:05")
@@ -178,9 +186,6 @@ func (c *Crawler) handleFeed(feed *feeder.Feed, ch *feeder.Channel, items []*fee
 				date = t.Format("2006-01-02 15:04:05")
 				break
 			}
-		}
-		if guid == "" {
-			guid = link
 		}
 
 		site := ch.Title
@@ -245,7 +250,11 @@ func (c *Crawler) Run() {
 			println("Fetching", link)
 			time.Sleep(1 * time.Second)
 			err := c.feed.Fetch(link, func(charset string, input io.Reader) (io.Reader, error) {
-				return mahonia.NewDecoder(charset).NewReader(input), nil
+				enc := encoding.GetEncoding(charset)
+				if enc != nil {
+					return transform.NewReader(input, enc.NewEncoder()), nil
+				}
+				return input, nil
 			})
 			if err != nil {
 				log.Println(err)
